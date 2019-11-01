@@ -15,6 +15,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
+    private int initialPosition = 60;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -23,21 +25,24 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         PagedListModelAdapter adapter = initAdapter();
         recyclerView.setAdapter(adapter);
+        recyclerView.scrollToPosition(initialPosition);
     }
 
     private PagedListModelAdapter initAdapter() {
-        MyDataSource myDataSource = new MyDataSource(124, 500);
+        SimpleDataSource dataSource = new SimpleDataSource(124, 500);
 
         PagedList.Config config = new PagedList.Config.Builder()
                 .setEnablePlaceholders(true)
                 .setPageSize(10)
-                //.setInitialLoadSizeHint(20)
+                .setPrefetchDistance(5)     //optional (default = pageSize)
+                .setInitialLoadSizeHint(20) //optional (default = pageSize*3)
                 .build();
 
-        PagedList<Model> pagedList = new PagedList.Builder<>(myDataSource, config)
+        PagedList<Model> pagedList = new PagedList.Builder<>(dataSource, config)
                 .setNotifyExecutor(new MainThreadExecutor())
                 .setFetchExecutor(Executors.newFixedThreadPool(2))
                 .setBoundaryCallback(new MyBoundaryCallback())  //optional
+                .setInitialKey(initialPosition)                 //optional
                 .build();
 
         PagedListModelAdapter adapter = new PagedListModelAdapter();
